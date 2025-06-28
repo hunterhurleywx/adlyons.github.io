@@ -96,7 +96,7 @@
 
     async function loadCounties() {
       try {
-        const resp = await fetch("https://raw.githubusercontent.com/codeforamerica/click_that_hood/master/public/data/counties.geojson");
+        const resp = await fetch("https://gist.githubusercontent.com/sdwfrost/d1c73f91dd9d175998ed166eb216994a/raw/3fcd5e29d399b097ce86f158bdebe39a72c94a37/counties.geojson");
         return await resp.json();
       } catch {
         console.warn("Could not load counties.");
@@ -215,8 +215,8 @@
 
         const radarId = await getRadarSite(lat, lon);
         if (radarId) {
-          const wmsUrl = `https://opengeo.ncep.noaa.gov/geoserver/ktlx/wms`;
-          const layerName = `ktlx_sr_bref`;
+          const wmsUrl = `https://opengeo.ncep.noaa.gov/geoserver/${radarId}/wms`;
+          const layerName = `${radarId}_sr_bref`;
           if (radarLayer) map.removeLayer(radarLayer);
           radarLayer = L.tileLayer.wms(wmsUrl, {
             layers: layerName,
