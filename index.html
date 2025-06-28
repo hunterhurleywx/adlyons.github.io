@@ -214,8 +214,8 @@
         map.removeLayer(radarLayer);
       }
       if (nearestRadar) {
-        radarLayer = L.tileLayer.wms(`https://opengeo.ncep.noaa.gov/geoserver/${nearestRadar.toLowerCase()}/wms`, {
-          layers: `${nearestRadar.toLowerCase()}_sr_bref`,
+        radarLayer = L.tileLayer.wms(`https://opengeo.ncep.noaa.gov/geoserver/ktlx/wms`, {
+          layers: `ktlx_sr_bref`,
           format: 'image/png',
           transparent: true,
           version: '1.3.0',
