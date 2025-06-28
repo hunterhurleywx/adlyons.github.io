@@ -215,8 +215,8 @@
 
         const radarId = await getRadarSite(lat, lon);
         if (radarId) {
-          const wmsUrl = `https://opengeo.ncep.noaa.gov/geoserver/${radarId}/wms`;
-          const layerName = `${radarId}_sr_bref`;
+          const wmsUrl = `https://opengeo.ncep.noaa.gov/geoserver/ktlx/wms`;
+          const layerName = `ktlx_sr_bref`;
           if (radarLayer) map.removeLayer(radarLayer);
           radarLayer = L.tileLayer.wms(wmsUrl, {
             layers: layerName,
