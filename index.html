@@ -187,9 +187,7 @@
       navigator.geolocation.watchPosition(async pos => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-        //const lat = 44.57
-        //const lon = -96.28
-
+        
         if (!map) {
           map = L.map('map', { zoomControl: false }).setView([lat, lon], 10);
 
