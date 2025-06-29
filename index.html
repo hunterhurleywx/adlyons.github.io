@@ -160,8 +160,8 @@
 
 
       document.getElementById("info").innerHTML = `
-        <strong>Nearest City:</strong> ${city}, ${state} <br>
         <strong>County:</strong> ${countyName} <br>
+        <strong>Nearest City:</strong> ${city}, ${state} <br>
         <strong>Distance/Direction:</strong> ${distMi} mi ${direction} <br>
         <strong style="${alertStyle}">Alert:</strong> <span style="${alertStyle}">${alertText}</span>
       `;
@@ -187,7 +187,7 @@
       navigator.geolocation.watchPosition(async pos => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
-        
+
         if (!map) {
           map = L.map('map', { zoomControl: false }).setView([lat, lon], 10);
 
