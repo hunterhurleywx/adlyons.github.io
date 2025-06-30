@@ -22,7 +22,7 @@
       height: 320px;
       display: flex;
       flex-direction: column;
-      border: 5px solid black;
+      border: 4px solid black;
       background-color: rgba(255,255,255,0.8);
       transition: background-color 0.5s ease;
       z-index: 1000;
@@ -34,8 +34,8 @@
     #info {
       padding: 8px;
       font-family: Arial, sans-serif;
-      font-size: 18px;
-      text-align: center;
+      font-size: 16px;
+      text-align: left;
     }
     #clock {
       position: fixed;
@@ -45,7 +45,7 @@
       border: 4px solid black;
       background-color: rgba(255,255,255,0.8);
       font-family: Arial, sans-serif;
-      font-size: 22px;
+      font-size: 20px;
       z-index: 1001;
       transition: background-color 0.5s ease;
     }
@@ -61,7 +61,7 @@
   <script>
     let map, marker, radarLayer, wwaLayer, countyLayer;
     let radarMode = "sr_bref";
-    let currentRadarStation = null;
+    let radarSwitchTimer, zoomOutTimer;
 
     function updateClock() {
       const now = new Date();
@@ -93,6 +93,7 @@
       let alertText = "No active severe alerts.";
 
       if (alertsData.features.length > 0) {
+        // prioritize warnings over watches
         let priority = 0;
         for (const alert of alertsData.features) {
           const event = alert.properties.event;
@@ -134,27 +135,18 @@
       }
 
       const radarStation = pointsData.properties.radarStation.toLowerCase();
-
-      if (radarStation !== currentRadarStation) {
-        currentRadarStation = radarStation;
-        if (radarLayer) map.removeLayer(radarLayer);
-        radarLayer = L.tileLayer.wms(
-          `https://opengeo.ncep.noaa.gov/geoserver/${radarStation}/wms`,
-          {
-            layers: `${radarStation}_${radarMode}`,
-            format: "image/png",
-            transparent: true,
-            attribution: "NOAA/NWS",
-            opacity: 0.73,
-            version: "1.3.0"
-          }
-        ).addTo(map);
-      } else {
-        // only switch product on same station
-        if (radarLayer) {
-          radarLayer.setParams({ layers: `${radarStation}_${radarMode}` });
+      if (radarLayer) map.removeLayer(radarLayer);
+      radarLayer = L.tileLayer.wms(
+        `https://opengeo.ncep.noaa.gov/geoserver/${radarStation}/wms`,
+        {
+          layers: `${radarStation}_${radarMode}`,
+          format: "image/png",
+          transparent: true,
+          attribution: "NOAA/NWS",
+          opacity: 0.73,
+          version: "1.3.0"
         }
-      }
+      ).addTo(map);
 
       const cityCoords = pointsData.properties.relativeLocation.geometry.coordinates;
       const distKm = distance(lat, lon, cityCoords[1], cityCoords[0]);
@@ -163,8 +155,9 @@
 
       let alertStyle = "";
       if (alertText.includes("Tornado Warning") || alertText.includes("Severe Thunderstorm Warning")) {
-        alertStyle = 'font-weight: bold; font-size: 21px;';
+        alertStyle = 'font-weight: bold; font-size: 21px;'; // 16 + 5 pxx
       }
+
 
       document.getElementById("info").innerHTML = `
         <strong>County:</strong> ${countyName} <br>
@@ -173,6 +166,7 @@
         <strong style="${alertStyle}">Alert:</strong> <span style="${alertStyle}">${alertText}</span>
       `;
     }
+
 
     function distance(lat1, lon1, lat2, lon2) {
       const R = 6371;
@@ -190,102 +184,96 @@
         alert("Geolocation not supported.");
         return;
       }
+      navigator.geolocation.watchPosition(async pos => {
+        const lat = pos.coords.latitude;
+        const lon = pos.coords.longitude;
 
-      async function updatePosition() {
-        navigator.geolocation.getCurrentPosition(async pos => {
-          const lat = pos.coords.latitude;
-          const lon = pos.coords.longitude;
+        if (!map) {
+          map = L.map('map', { zoomControl: false }).setView([lat, lon], 10);
 
-          if (!map) {
-            map = L.map('map', { zoomControl: false }).setView([lat, lon], 10);
+          // custom car icon
+          const carIcon = L.icon({
+            iconUrl: "https://cdn-icons-png.flaticon.com/512/5952/5952510.png",
+            iconSize: [40,40],
+            iconAnchor: [16,16]
+          });
+          marker = L.marker([lat, lon], {icon: carIcon}).addTo(map);
 
-            const carIcon = L.icon({
-              iconUrl: "https://cdn-icons-png.flaticon.com/512/1680/1680219.png",
-              iconSize: [40,40],
-              iconAnchor: [20,20]
+          // OSM basemap
+          L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: "© OpenStreetMap contributors"
+          }).addTo(map);
+
+          // create a pane with highest z-index for warnings
+          map.createPane("warningsPane");
+          map.getPane("warningsPane").style.zIndex = 650;
+
+          // WWA overlay from NOAA MapServer
+          wwaLayer = L.tileLayer.wms(
+            "https://mapservices.weather.noaa.gov/eventdriven/services/WWA/watch_warn_adv/MapServer/WMSServer",
+            {
+              layers: "1",
+              format: "image/png",
+              transparent: true,
+              attribution: "NOAA/NWS",
+              version: "1.3.0",
+              pane: "warningsPane"
+            }
+          ).addTo(map);
+
+          wLayer = L.tileLayer.wms(
+            "https://mapservices.weather.noaa.gov/eventdriven/services/WWA/watch_warn_adv/MapServer/WMSServer",
+            {
+              layers: "1",
+              format: "image/png",
+              transparent: true,
+              attribution: "NOAA/NWS",
+              version: "1.3.0",
+              pane: "warningsPane"
+            }
+          ).addTo(map);
+
+          // counties geojson
+          fetch("https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json")
+            .then(r => r.json())
+            .then(countyData => {
+              countyLayer = L.geoJSON(countyData, {
+                style: {
+                  color: "black",
+                  weight: 0.5,
+                  fillOpacity: 0
+                }
+              }).addTo(map);
             });
-            marker = L.marker([lat, lon], {icon: carIcon}).addTo(map);
+        } else {
+          marker.setLatLng([lat, lon]);
+          map.setView([lat, lon]);
+        }
 
-          L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=93193627-3b89-42b8-b36d-b4f9720a3dac", {
-            attribution: "© OpenMapTiles © OpenStreetMap contributors"
-            }).addTo(map);
+        await getWeatherInfo(lat, lon);
+      }, console.error, { enableHighAccuracy: true });
 
-            map.createPane("warningsPane");
-            map.getPane("warningsPane").style.zIndex = 650;
-
-            wLayer = L.tileLayer.wms(
-              "https://mapservices.weather.noaa.gov/eventdriven/services/WWA/watch_warn_adv/MapServer/WMSServer",
-              {
-                layers: "1",
-                format: "image/png",
-                transparent: true,
-                attribution: "NOAA/NWS",
-                version: "1.3.0",
-                pane: "warningsPane"
-              }
-            ).addTo(map);
-
-
-            wwaLayer = L.tileLayer.wms(
-              "https://mapservices.weather.noaa.gov/eventdriven/services/WWA/watch_warn_adv/MapServer/WMSServer",
-              {
-                layers: "0",
-                format: "image/png",
-                transparent: true,
-                attribution: "NOAA/NWS",
-                version: "1.3.0",
-                opacity:0.4
-              }
-            ).addTo(map);
-
-            fetch("https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json")
-              .then(r => r.json())
-              .then(countyData => {
-                countyLayer = L.geoJSON(countyData, {
-                  style: {
-                    color: "#300000",
-                    weight: 1,
-                    fillOpacity: 0,
-                    dashArray: '10, 10'
-                  }
-                }).addTo(map);
-              });
-          } else {
-            marker.setLatLng([lat, lon]);
-            map.setView([lat, lon]);
-          }
-
-          await getWeatherInfo(lat, lon);
-        }, console.error, { enableHighAccuracy: true });
-      }
-
-      // first call immediately
-      updatePosition();
-
-      // then every minute
-      setInterval(updatePosition, 60 * 1000);
-
-      // radar mode switch every 5 minutes
-      setInterval(() => {
+      // switch radar product every 5 min
+      radarSwitchTimer = setInterval(() => {
         radarMode = (radarMode === "sr_bref") ? "sr_bvel" : "sr_bref";
       }, 1 * 60 * 1000);
 
-      // periodic wide zoom every 5 minutes
+      // wide zoom for 30 sec every 10 min
       setInterval(() => {
-        if (map) {
+        if(map) {
           const current = map.getCenter();
           map.setZoom(7);
-          setTimeout(() => {
+          zoomOutTimer = setTimeout(() => {
             map.setView(current, 10);
           }, 30 * 1000);
         }
-      }, 2 * 60 * 1000);
+      }, 3 * 60 * 1000);
+    }
 
-      // optional page refresh every 5 minutes
       setInterval(() => {
         location.reload();
-      }, 5 * 60 * 1000);
-    }
+          }, 5 * 60 * 1000);
+
 
     setup();
   </script>
