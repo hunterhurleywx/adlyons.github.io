@@ -16,10 +16,10 @@
     }
     #container {
       position: fixed;
-      bottom: 20px;
-      left: 20px;
-      width: 480px;
-      height: 320px;
+      bottom: 10px;
+      left: 10px;
+      width: 600px;
+      height: 400px;
       display: flex;
       flex-direction: column;
       border: 5px solid black;
@@ -34,18 +34,18 @@
     #info {
       padding: 8px;
       font-family: Arial, sans-serif;
-      font-size: 18px;
+      font-size: 20px;
       text-align: center;
     }
     #clock {
       position: fixed;
-      bottom: 360px;
-      left: 20px;
+      bottom: 400px;
+      left: 10px;
       padding: 8px 12px;
       border: 4px solid black;
       background-color: rgba(255,255,255,0.8);
       font-family: Arial, sans-serif;
-      font-size: 22px;
+      font-size: 24px;
       z-index: 1001;
       transition: background-color 0.5s ease;
     }
@@ -144,7 +144,6 @@
             layers: `${radarStation}_${radarMode}`,
             format: "image/png",
             transparent: true,
-            attribution: "NOAA/NWS",
             opacity: 0.73,
             version: "1.3.0"
           }
@@ -208,7 +207,6 @@
             marker = L.marker([lat, lon], {icon: carIcon}).addTo(map);
 
           L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=93193627-3b89-42b8-b36d-b4f9720a3dac", {
-            attribution: "© OpenMapTiles © OpenStreetMap contributors"
             }).addTo(map);
 
             map.createPane("warningsPane");
@@ -220,7 +218,6 @@
                 layers: "1",
                 format: "image/png",
                 transparent: true,
-                attribution: "NOAA/NWS",
                 version: "1.3.0",
                 pane: "warningsPane"
               }
@@ -233,7 +230,6 @@
                 layers: "0",
                 format: "image/png",
                 transparent: true,
-                attribution: "NOAA/NWS",
                 version: "1.3.0",
                 opacity:0.4
               }
@@ -268,7 +264,6 @@
               layers: ["0","16"],  // Confirm this layer from GetCapabilities or try "0" as default
               format: "image/png",
               transparent: true,
-              attribution: "NOAA Surface Observations",
               version: "1.3.0",
               pane: "obsPane"
             }
