@@ -60,8 +60,29 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     let map, marker, radarLayer, wwaLayer, countyLayer;
+    let stormReportsLayer = null;
     let radarMode = "sr_bref";
     let currentRadarStation = null;
+
+    // Icon definitions for storm reports
+    const tornadoIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/2557/2557058.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
+    const hailIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/6157/6157591.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
+    const windIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/9755/9755253.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -32]
+    });
 
     function updateClock() {
       const now = new Date();
@@ -184,6 +205,35 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
+    // NEW: Load and show storm reports from Flask GeoJSON endpoint
+    async function loadStormReports() {
+      try {
+        const resp = await fetch("http://twodogswx.net:8080/stormreports");
+        const geojson = await resp.json();
+
+        if (stormReportsLayer) {
+          map.removeLayer(stormReportsLayer);
+        }
+
+        stormReportsLayer = L.geoJSON(geojson, {
+          pointToLayer: (feature, latlng) => {
+            let icon = tornadoIcon;
+            const type = feature.properties.event_type;
+            if (type === "hail") icon = hailIcon;
+            else if (type === "wind") icon = windIcon;
+
+            return L.marker(latlng, { icon }).bindPopup(`
+              <strong>${type.toUpperCase()}</strong><br/>
+              Time: ${feature.properties.time}<br/>
+              Location: ${feature.properties.location}, ${feature.properties.state}<br/>
+              Comments: ${feature.properties.comments}
+            `);
+          }
+        }).addTo(map);
+      } catch (e) {
+        console.error("Failed to load storm reports", e);
+      }
+    }
 
     function setup() {
       if (!navigator.geolocation) {
@@ -206,7 +256,7 @@
             });
             marker = L.marker([lat, lon], {icon: carIcon}).addTo(map);
 
-          L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=93193627-3b89-42b8-b36d-b4f9720a3dac", {
+            L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=93193627-3b89-42b8-b36d-b4f9720a3dac", {
             }).addTo(map);
 
             map.createPane("warningsPane");
@@ -222,7 +272,6 @@
                 pane: "warningsPane"
               }
             ).addTo(map);
-
 
             wwaLayer = L.tileLayer.wms(
               "https://mapservices.weather.noaa.gov/eventdriven/services/WWA/watch_warn_adv/MapServer/WMSServer",
@@ -269,23 +318,11 @@
             }
           ).addTo(map);
 
-
-
-
-//          const spcLayer = L.tileLayer.wms(
-//            "https://mapservices.weather.noaa.gov/vector/services/outlooks/SPC_wx_outlks/MapServer/WMSServer",
-//            {
-//              layers: "25",  // Confirm this layer from GetCapabilities or try "0" as default
-//              format: "image/png",
-//              transparent: true,
-//              attribution: "NOAA Surface Observations",
-//              version: "1.3.0",
-//              opacity:0.1
-//            }
-//          ).addTo(map);
-
-
           await getWeatherInfo(lat, lon);
+
+          // Load storm reports layer
+          await loadStormReports();
+
         }, console.error, { enableHighAccuracy: true });
       }
 
