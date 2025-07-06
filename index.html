@@ -49,6 +49,19 @@
       z-index: 1001;
       transition: background-color 0.5s ease;
     }
+    #stormBanner {
+      position: fixed;
+      bottom: 10px;
+      left: 60%;
+      transform: translateX(-50%);
+      padding: 8px 20px;
+      border: 4px solid black;
+      background-color: rgba(255,255,255,0.8);
+      font-family: Arial, sans-serif;
+      font-size: 22px;
+      z-index: 1002;
+      transition: background-color 0.5s ease;
+    }
   </style>
 </head>
 <body>
@@ -57,14 +70,14 @@
     <div id="map"></div>
     <div id="info">Loading location info...</div>
   </div>
+  <div id="stormBanner">Loading storm report distance...</div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    let map, marker, radarLayer, wwaLayer, countyLayer;
-    let stormReportsLayer = null;
+    let map, marker, radarLayer, wwaLayer, countyLayer, stormReportsLayer = null;
     let radarMode = "sr_bref";
     let currentRadarStation = null;
 
-    // Icon definitions for storm reports
+    // storm icons
     const tornadoIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/512/2557/2557058.png',
       iconSize: [32, 32],
@@ -170,7 +183,6 @@
           }
         ).addTo(map);
       } else {
-        // only switch product on same station
         if (radarLayer) {
           radarLayer.setParams({ layers: `${radarStation}_${radarMode}` });
         }
@@ -205,7 +217,6 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
-    // NEW: Load and show storm reports from Flask GeoJSON endpoint
     async function loadStormReports() {
       try {
         const resp = await fetch("https://twodogswx.net/stormreports");
@@ -230,8 +241,50 @@
             `);
           }
         }).addTo(map);
+
+        // banner code
+        const banner = document.getElementById("stormBanner");
+        if (geojson.features.length > 0 && marker) {
+          let closest = null;
+          let minDist = Infinity;
+          const userLat = marker.getLatLng().lat;
+          const userLon = marker.getLatLng().lng;
+
+          for (const feature of geojson.features) {
+            const lat = feature.geometry.coordinates[1];
+            const lon = feature.geometry.coordinates[0];
+            const d = distance(userLat, userLon, lat, lon);
+            if (d < minDist) {
+              minDist = d;
+              closest = feature;
+            }
+          }
+
+          if (closest) {
+            const type = closest.properties.event_type;
+            const magnitude = closest.properties.magnitude ?? "N/A";
+            const distMi = (minDist * 0.621371).toFixed(1);
+            let color = "gray";
+            if (type === "tornado") color = "red";
+            else if (type === "wind") color = "blue";
+            else if (type === "hail") color = "green";
+
+            banner.style.backgroundColor = color;
+            banner.innerHTML = `
+              Nearest Storm Report: ${type.toUpperCase()} (mag ${magnitude})
+              at ${distMi} mi away
+            `;
+          }
+        } else {
+          banner.style.backgroundColor = "gray";
+          banner.innerHTML = "No reports nearby.";
+        }
+
       } catch (e) {
         console.error("Failed to load storm reports", e);
+        const banner = document.getElementById("stormBanner");
+        banner.style.backgroundColor = "gray";
+        banner.textContent = "No reports nearby.";
       }
     }
 
@@ -256,8 +309,7 @@
             });
             marker = L.marker([lat, lon], {icon: carIcon}).addTo(map);
 
-            L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=93193627-3b89-42b8-b36d-b4f9720a3dac", {
-            }).addTo(map);
+            L.tileLayer("https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png?api_key=93193627-3b89-42b8-b36d-b4f9720a3dac", {}).addTo(map);
 
             map.createPane("warningsPane");
             map.getPane("warningsPane").style.zIndex = 650;
@@ -280,7 +332,7 @@
                 format: "image/png",
                 transparent: true,
                 version: "1.3.0",
-                opacity:0.4
+                opacity: 0.4
               }
             ).addTo(map);
 
@@ -301,16 +353,15 @@
             map.setView([lat, lon]);
           }
 
-          // Create a pane for observations (optional for z-index control)
           if (!map.getPane("obsPane")) {
             map.createPane("obsPane");
-            map.getPane("obsPane").style.zIndex = 640; // below warningsPane (650)
+            map.getPane("obsPane").style.zIndex = 640;
           }
 
-          const obsLayer = L.tileLayer.wms(
+          L.tileLayer.wms(
             "https://mapservices.weather.noaa.gov/vector/services/obs/surface_obs/MapServer/WMSServer",
             {
-              layers: ["0","16"],  // Confirm this layer from GetCapabilities or try "0" as default
+              layers: ["0","16"],
               format: "image/png",
               transparent: true,
               version: "1.3.0",
@@ -319,25 +370,15 @@
           ).addTo(map);
 
           await getWeatherInfo(lat, lon);
-
-          // Load storm reports layer
           await loadStormReports();
-
         }, console.error, { enableHighAccuracy: true });
       }
 
-      // first call immediately
       updatePosition();
-
-      // then every minute
       setInterval(updatePosition, 60 * 1000);
-
-      // radar mode switch every 5 minutes
       setInterval(() => {
         radarMode = (radarMode === "sr_bref") ? "sr_bvel" : "sr_bref";
       }, 1 * 60 * 1000);
-
-      // periodic wide zoom every 5 minutes
       setInterval(() => {
         if (map) {
           const current = map.getCenter();
@@ -347,8 +388,6 @@
           }, 30 * 1000);
         }
       }, 2 * 60 * 1000);
-
-      // optional page refresh every 5 minutes
       setInterval(() => {
         location.reload();
       }, 5 * 60 * 1000);
