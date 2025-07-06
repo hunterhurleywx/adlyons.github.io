@@ -208,7 +208,7 @@
     // NEW: Load and show storm reports from Flask GeoJSON endpoint
     async function loadStormReports() {
       try {
-        const resp = await fetch("http://twodogswx.net:8080/stormreports");
+        const resp = await fetch("https://twodogswx.net/stormreports");
         const geojson = await resp.json();
 
         if (stormReportsLayer) {
