@@ -273,8 +273,8 @@
 
             banner.style.backgroundColor = color;
             banner.innerHTML = `
-              Nearest Storm Report: ${type.toUpperCase()} (mag ${magnitude})
-              at ${distMi} mi away Near : ${LSR_loc}, ${LSR_state}
+              Nearest Storm Report: ${type.toUpperCase()} (mag: ${parseFloat(magnitude)/100})
+              at ${Math.round(distMi)} mi away Near : ${LSR_loc}, ${LSR_state}
             `;
           }
         } else {
