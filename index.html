@@ -264,6 +264,8 @@
             const type = closest.properties.event_type;
             const magnitude = closest.properties.size ?? "Unavaliable";
             const distMi = (minDist * 0.621371).toFixed(1);
+            const LSR_loc = closest.properties.location ?? Oooof
+            const LSR_state = closest.properties.state ?? Weeee
             let color = "gray";
             if (type === "tornado") color = "red";
             else if (type === "wind") color = "blue";
@@ -272,7 +274,7 @@
             banner.style.backgroundColor = color;
             banner.innerHTML = `
               Nearest Storm Report: ${type.toUpperCase()} (mag ${magnitude})
-              at ${distMi} mi away at : ${feature.properties.location}, ${feature.properties.state}
+              at ${distMi} mi away Near : ${LSR_loc}, ${LSR_state}
             `;
           }
         } else {
