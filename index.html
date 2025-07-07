@@ -262,7 +262,7 @@
 
           if (closest) {
             const type = closest.properties.event_type;
-            const magnitude = closest.properties.size?? "Unavaliable";
+            const magnitude = closest.properties.size ?? "Unavaliable";
             const distMi = (minDist * 0.621371).toFixed(1);
             let color = "gray";
             if (type === "tornado") color = "red";
