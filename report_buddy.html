@@ -129,12 +129,20 @@
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+
+
+    const HD_CONSTRAINTS = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 2160},
+        height: { ideal: 1440},
+        frameRate: { ideal: 30, max: 60 }
+      },
+      audio: false
+    };
     async function startCamera() {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } },
-          audio: false
-        });
+        const stream = await navigator.mediaDevices.getUserMedia(HD_CONSTRAINTS);
         const video = document.getElementById('video');
         video.srcObject = stream;
         await video.play();
@@ -147,10 +155,13 @@
 
     function initMap() {
       const map = L.map('map');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+        zoomControl: false, 
+        attributionControl: false,
         maxZoom: 19
       }).addTo(map);
+
+      map.removeControl(map.zoomControl)
 
       function resizeFix() { map.invalidateSize(); }
       window.addEventListener('resize', resizeFix);
