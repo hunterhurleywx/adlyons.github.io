@@ -60,9 +60,9 @@
       bottom: 1rem;
       left: 1rem;
       background: rgba(0, 0, 0, 0.4);
-      padding: 0.5rem 0.75rem;
+      padding: 0.15rem 0.55rem;
       border-radius: 8px;
-      font-size: 1.75rem;
+      font-size: 1.0rem;
       line-height: 1.2;
       z-index: 20;
       pointer-events: none;
@@ -74,12 +74,12 @@
       top: 5%;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.6);
+      background: rgba(0, 0, 0, 0.2);
       padding: 0.5rem 1rem;
       border-radius: 10px;
       z-index: 25;
       color: #fff;
-      font-size: 3.5rem;
+      font-size: 1.5rem;
       font-weight: bold;
       text-align: center;
     }
@@ -114,7 +114,7 @@
     <div id="map"></div>
     <div id="geoInfo">Locating…</div>
     <div id="eventSelector">
-      <label for="eventType">Event: </label>
+      <label for="eventType"></label>
       <select id="eventType">
         <option></option>
         <option value="Tornado">Tornado</option>
@@ -161,7 +161,7 @@
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(position => {
           const { latitude: lat, longitude: lon, accuracy } = position.coords;
-          map.setView([lat, lon], 10);
+          map.setView([lat, lon], 9);
           L.marker([lat, lon]).addTo(map);
           if (accuracy) {
             L.circle([lat, lon], { radius: accuracy, color: '#3388ff', weight: 1 }).addTo(map);
