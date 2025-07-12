@@ -25,10 +25,10 @@
     #snapshot button{margin-top:1rem;padding:.5rem 1rem;font-size:1rem;border:none;border-radius:6px;background:#fff;cursor:pointer}
     #loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:30}
 
-    #tweetPanel{position:fixed;top:0;right:-110vw;width:98vw;height:100vh;background:rgba(0,0,0,.95);color:#fff;z-index:100;display:flex;align-items:center;justify-content:center;transition:right .3s ease; box-sizing: border-box; padding: 1rem; }
+    #tweetPanel{position:fixed;top:0;right:-100vw;width:98vw;height:100vh;background:rgba(0,0,0,.95);color:#fff;z-index:100;display:flex;align-items:center;justify-content:center;transition:right .3s ease; box-sizing: border-box; padding: 1rem; }
     #tweetPanel.open{right:0}
-    #tweetContent{text-align:center;max-width:90; vw box-sizing: border-box;}
-    #tweetText{width:90vw;height:30vh;font-size:1rem;padding:1rem;background:#111;color:#0f0;border:1px solid #888;border-radius:10px;resize:none;margin-bottom:1rem}
+    #tweetContent{text-align:center;max-width:88; vw box-sizing: border-box;}
+    #tweetText{width:88vw;height:30vh;font-size:1rem;padding:1rem;background:#111;color:#0f0;border:1px solid #888;border-radius:10px;resize:none;margin-bottom:1rem}
     #tweetPanel button{padding:.5rem 1rem;font-size:1rem;background:#fff;color:#000;border:none;border-radius:5px;cursor:pointer}
   </style>
 </head>
@@ -42,7 +42,7 @@
     <div id="eventSelector">
       <label for="eventType"></label>
       <select id="eventType">
-        <option value=""></option>
+        <option value="">Select Report Type</option>
         <option value="Tornado">Tornado</option>
         <option value="Funnel Cloud">Funnel Cloud</option>
         <option value="Wall Cloud">Wall Cloud</option>
