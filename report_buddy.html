@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Report Buddy V0.1</title>
+  <title>Report Buddy V0.3</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -37,7 +37,7 @@
     <div id="videoContainer"><video id="video" autoplay playsinline muted></video><div id="loader">Loading camera…</div></div>
     <div id="map"></div>
     <div id="geoInfo">Locating…</div>
-    <div id="reportbuddy">Report Buddy v0.1</div>
+    <div id="reportbuddy">Report Buddy v0.3</div>
 
     <div id="eventSelector">
       <label for="eventType"></label>
@@ -48,6 +48,8 @@
         <option value="Wall Cloud">Wall Cloud</option>
         <option value="Hail">Hail</option>
         <option value="Damage">Damage</option>
+        <option value="Flooding">Flooding</option>
+        <option value="WildFire">WildFire</option>
       </select>
     </div>
 
@@ -125,7 +127,7 @@
       const canvas=await html2canvas(document.getElementById('app'),{useCORS:true});
       img.src=canvas.toDataURL('image/png');
       overlay.style.display='flex';
-      captureButton.style.opacity = '0.9';
+      captureButton.style.opacity = '1';
     }
 
     async function fetchCountyName(url){
@@ -157,17 +159,18 @@
 
     function initMap(){
       const map=L.map('map');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:9}).addTo(map);
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(async pos=>{
           const {latitude:lat,longitude:lon,accuracy,heading}=pos.coords;
-          map.setView([lat,lon],9);
+          map.setView([lat,lon],8);
           L.marker([lat,lon]).addTo(map);
           if(accuracy)L.circle([lat,lon],{radius:accuracy,color:'#3388ff',weight:1}).addTo(map);
           await fetchNwsInfo(lat,lon,heading);
         },e=>alert('Geo error: '+e.message),{enableHighAccuracy:true,timeout:1e4});
       }
       map.zoomControl.remove();
+      map.scrollWheelZoom.disable();
     }
 
     function setupMenus(){
