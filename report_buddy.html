@@ -152,20 +152,131 @@
         return z.properties?.name||url.split('/').pop();
       }catch{return url.split('/').pop();}
     }
-
+//TODO: Bug fix NWS Twitter handle formatting pull from dictonary of WFO IDs to handle. {OUN: @NWSNORMAN} stupid ass weather service
     async function fetchNwsInfo(lat,lon,heading){
       const info=document.getElementById('geoInfo');
+
+      const wfo_handles=
+
+      {
+        "ABQ": "NWSAlbuquerque",
+        "ABR": "NWSAberdeen",
+        "AFC": "NWSAnchorage",
+        "AMA": "NWSAmarillo",
+        "APX": "NWSGaylord",
+        "ARX": "NWSLaCrosse",
+        "BGM": "NWSBinghamton",
+        "BIS": "NWSBismarck",
+        "BOI": "NWSBoise",
+        "BOX": "NWSBoston",
+        "BTV": "NWSBurlington",
+        "BUF": "NWSBuffalo",
+        "BYZ": "NWSBillings",
+        "CAE": "NWSColumbiaSC",
+        "CAR": "NWSCaribou",
+        "CHS": "NWSCharlestonSC",
+        "CLE": "NWSCleveland",
+        "CRP": "NWSCorpus",
+        "CTP": "NWSStateCollege",
+        "DDC": "NWSDodgeCity",
+        "DLH": "NWSDuluth",
+        "DMX": "NWSDesMoines",
+        "DTX": "NWSDetroit",
+        "DVN": "NWSDavenport",
+        "EAX": "NWSPleasantHill",
+        "EPZ": "NWSElPaso",
+        "EWX": "NWSEWX",
+        "FGF": "NWSGrandForks",
+        "FGZ": "NWSFlagstaffAZ",
+        "FSD": "NWSFSiouxFalls",
+        "FWD": "NWSFortWorth",
+        "GID": "NWSHastings",
+        "GLD": "NWSGoodland",
+        "GRB": "NWSGreenBay",
+        "GRR": "NWSGrandRapids",
+        "GSP": "NWSGSP",
+        "GUM": "NWSGuam",
+        "HGX": "NWSHouston",
+        "HNX": "NWSSanJoaquinValley",
+        "HUN": "NWSHuntsville",
+        "ICT": "NWSSWichita",
+        "ILM": "NWSWilmingtonNC",
+        "ILN": "NWSILN",
+        "IND": "NWSIndianapolis",
+        "JAN": "NWSJacksonMS",
+        "JAX": "NWSJacksonville",
+        "JKL": "NWSJacksonKY",
+        "LBF": "NWSNorthPlatte",
+        "LCH": "NWSLakeCharles",
+        "LIX": "NWSNewOrleans",
+        "LKN": "NWSElko",
+        "LMK": "NWSLouisville",
+        "LOT": "NWSChicago",
+        "LOX": "NWSLosAngeles",
+        "LUB": "NWSLubbock",
+        "LWX": "NWSLWX",
+        "LZK": "NWSLittleRock",
+        "MAF": "NWSMidland",
+        "MEG": "NWSMemphis",
+        "MFL": "NWSMiamiFL",
+        "MHX": "NWSMoreheadCity",
+        "MKX": "NWSMilwaukee",
+        "MLB": "NWSMelbourneFL",
+        "MOB": "NWSMobile",
+        "MPX": "NWSTwinCities",
+        "MQT": "NWSMarquette",
+        "MRX": "NWSMorristownTN",
+        "MSO": "NWSMissoula",
+        "MTR": "NWSSanFrancisco",
+        "OUN": "NWSNorman",
+        "PAH": "NWSPaducah",
+        "PBZ": "NWSPittsburgh",
+        "PDT": "NWSPendleton",
+        "PHI": "NWSPhilly",
+        "PIH": "NWPocatello",
+        "PQR": "NWSPortland",
+        "PSR": "NWSPhoenix",
+        "PUB": "NWSPueblo",
+        "RAH": "NWSRaleigh",
+        "REV": "NWSReno",
+        "RIW": "NWSRiverton",
+        "RLX": "NWCharlestonWV",
+        "RNK": "NWSRNK",
+        "SGF": "NWSpringfield",
+        "SGX": "NWSSanDiego",
+        "SHV": "NWSShreveport",
+        "SJU": "NWSSanJuan",
+        "SLC": "NWSSaltLakeCity",
+        "STO": "NWSSacramento",
+        "TAE": "NWSTallahassee",
+        "TBW": "NWSTampaBay",
+        "TFX": "NWSThunder",
+        "TOP": "NWSTopeka",
+        "TSA": "NWSTulsa",
+        "VEF": "NWSVegas",
+        "WFO": "NWS",        // Fallback
+        "WPC": "NWSWPC",
+        "AKQ": "NWSWakefieldVA",
+        "GYX": "NWSGrayPortland",
+        "OKX": "NWSNewYorkNY",
+        "SEW": "NWSSeattleTacoma",
+        "SJT": "NWSSanAngelo",
+        "OTX": "NWSSpokane",
+        "GJT": "NWSGrandJunction"
+      }
+
       try{
         const r=await fetch(`https://api.weather.gov/points/${lat},${lon}`);
         if(!r.ok)throw new Error(r.status);
         const d=await r.json();
-        const city=d.properties.relativeLocation?.properties?.city||'Unknown';
+        const city=d.properties.relativeLocation?.properties?.city||'Unknown'
         const state=d.properties.relativeLocation?.properties?.state||'UNK';
         const countyUrl=d.properties.county;
         const county=countyUrl?await fetchCountyName(countyUrl):'Unknown';
         const wfo=d.properties.cwa||'WFO';
-        tweetInfo={...tweetInfo,city,state,county,wfo:`NWS${wfo}`,lat:lat.toFixed(3),lon:lon.toFixed(3),timestamp:new Date().toLocaleString(),heading};
-        info.textContent=`${tweetInfo.timestamp} | Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near: ${city}, ${state} | ${county} County | WFO: ${wfo}${heading ? ' | Heading: ' + heading + '° (' + headingToCompass(heading) + ')' : ''}`;
+        const handle = wfoHandles[wfoCode] || `NWS${wfoCode}`;
+        tweetInfo={...tweetInfo,city,state,county,wfo:`${handle}`,lat:lat.toFixed(3),lon:lon.toFixed(3),timestamp:new Date().toLocaleString(),heading};
+        info.textContent=`${tweetInfo.timestamp} | Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near: ${city}, ${state} | ${county} County | WFO: ${wfo}${heading ? ' | Heading: ' + heading.toFixed(0) + '° (' + headingToCompass(heading) + ')' : ''}`;
       }catch(e){
         info.textContent='NWS fetch error';
       }
