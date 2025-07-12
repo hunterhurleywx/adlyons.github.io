@@ -10,7 +10,7 @@
     html,body{margin:0;padding:0;height:100%;background:#000;color:#fff;font-family:sans-serif;overscroll-behavior:none}
     #app{position:relative;width:100vw;height:100vh;overflow:visible}
     #reportbuddy{position:absolute;top:0.3%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);padding:.1rem .3rem;border-radius:2px;font-size:.65rem;line-height:1.25;z-index:100}
-    
+
     #videoContainer{position:relative;width:100%;height:100%;overflow:hidden}
 
     #video{width:100%;height:100%;object-fit:cover}
@@ -165,7 +165,7 @@
         const county=countyUrl?await fetchCountyName(countyUrl):'Unknown';
         const wfo=d.properties.cwa||'WFO';
         tweetInfo={...tweetInfo,city,state,county,wfo:`NWS${wfo}`,lat:lat.toFixed(3),lon:lon.toFixed(3),timestamp:new Date().toLocaleString(),heading};
-        info.textContent=`Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near: ${city}, ${state} | ${county} County | attn ${tweetInfo.wfo}${heading ? ' | Heading: ' + heading + '° (' + headingToCompass(heading) + ')' : ''}`;
+        info.textContent=`${tweetInfo.timestamp} | Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near: ${city}, ${state} | ${county} County | WFO: ${wfo}${heading ? ' | Heading: ' + heading + '° (' + headingToCompass(heading) + ')' : ''}`;
       }catch(e){
         info.textContent='NWS fetch error';
       }
