@@ -3,79 +3,50 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Camera & Map Viewer</title>
+  <title>Camera & Map Viewer</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
-    html, body { margin:0; padding:0; height:100%; background:#000; color:#fff; font-family:sans-serif; overscroll-behavior:none; }
-    #app { position:relative; width:100vw; height:100vh; overflow:hidden; }
-    #videoContainer { position:relative; width:100%; height:100%; overflow:hidden; }
-    #video { width:100%; height:100%; object-fit:cover; }
-    #map { position:absolute; bottom:0.5rem; right:0.5rem; width:30vw; height:20vh; min-width:150px; min-height:120px; border:2px solid #fff; border-radius:8px; overflow:hidden; z-index:20; }
-    #geoInfo { position:absolute; bottom:1rem; left:1rem; background:rgba(0,0,0,0.5); padding:0.4rem 0.6rem; border-radius:8px; font-size:0.85rem; line-height:1.25; z-index:20; pointer-events:none; max-width:65vw; }
-    #eventSelector { position:absolute; top:5%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); padding:0.5rem 1rem; border-radius:10px; z-index:25; color:#fff; font-size:1.5rem; font-weight:bold; text-align:center; }
-    #eventSelector select { background:transparent; color:#fff; font-size:1.75rem; border:none; outline:none; appearance:none; }
-    #hailSizeSelector { position:absolute; top:15%; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.6); padding:0.5rem 1rem; border-radius:10px; z-index:25; color:#fff; font-size:1.25rem; font-weight:bold; text-align:center; display:none; }
-    #hailSizeSelector select { background:transparent; color:#fff; font-size:1.25rem; border:none; outline:none; appearance:none; }
-    #captureBtn { position:absolute; bottom:6%; left:50%; transform:translateX(-50%); width:70px; height:70px; border:4px solid #fff; border-radius:50%; background:rgba(255,255,255,0.2); z-index:25; cursor:pointer; }
-    #captureBtn:active { background:rgba(255,255,255,0.4); }
-    #snapshot { position:absolute; inset:0; background:rgba(0,0,0,0.85); display:none; flex-direction:column; align-items:center; justify-content:center; z-index:40; }
-    #snapshot img { max-width:90%; max-height:80%; border:4px solid #fff; border-radius:8px; }
-    #snapshot button { margin-top:1rem; padding:0.5rem 1rem; font-size:1rem; border:none; border-radius:6px; background:#fff; cursor:pointer; }
-    #loader { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.6); z-index:30; }
+    html,body{margin:0;padding:0;height:100%;background:#000;color:#fff;font-family:sans-serif;overscroll-behavior:none}
+    #app{position:relative;width:100vw;height:100vh;overflow:hidden}
+    #reportbuddy{position:absolute;top:0.3%;left:50%background:rgba(0,0,0,.5);padding:.1rem .1rem;border-radius:2px;font-size:.35rem;line-height:1.25;z-index:100;}
 
-    /* Tweet Panel */
-    #tweetPanel {
-      position: fixed;
-      top: 0;
-      right: -100%;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0,0,0,0.95);
-      color: #fff;
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: right 0.3s ease;
-    }
-    #tweetPanel.open { right: 0; }
-    #tweetContent { max-width: 90vw; text-align: center; }
-    #tweetText {
-      width: 90vw;
-      height: 30vh;
-      font-size: 1rem;
-      padding: 1rem;
-      background: #111;
-      color: #0f0;
-      border: 1px solid #888;
-      border-radius: 10px;
-      resize: none;
-      margin-bottom: 1rem;
-    }
-    #tweetPanel button {
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      background: #fff;
-      color: #000;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    #videoContainer{position:relative;width:100%;height:100%;overflow:hidden}
+    #video{width:100%;height:100%;object-fit:cover}
+    #map{position:absolute;bottom:2.5rem;right:.5rem;width:30vw;height:20vh;min-width:150px;min-height:120px;border:2px solid #fff;border-radius:8px;overflow:hidden;z-index:20}
+    #geoInfo{position:absolute;bottom:1vh;left:1rem;background:rgba(0,0,0,.6);padding:.4rem .6rem;border-radius:8px;font-size:.85rem;line-height:1.25;z-index:20;pointer-events:none;max-width:100vw}
+    #eventSelector{position:absolute;top:5%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:.5rem 1rem;border-radius:10px;z-index:25;font-size:1.5rem;font-weight:bold;text-align:center}
+    #eventSelector select{background:transparent;color:#fff;font-size:1.75rem;border:none;outline:none;appearance:none}
+    #hailSizeSelector{position:absolute;top:15%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:.5rem 1rem;border-radius:10px;z-index:25;font-size:1.25rem;font-weight:bold;text-align:center;display:none}
+    #hailSizeSelector select{background:transparent;color:#fff;font-size:1.25rem;border:none;outline:none;appearance:none}
+    #captureBtn{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:50px;height:50px;border:4px solid #fff;border-radius:50%;background:rgba(255,255,255,.2);z-index:25;cursor:pointer}
+    #captureBtn:active{background:rgba(255,255,255,.4)}
+    #snapshot{position:absolute;inset:0;background:rgba(0,0,0,.85);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:40}
+    #snapshot img{max-width:90%;max-height:80%;border:4px solid #fff;border-radius:8px}
+    #snapshot button{margin-top:1rem;padding:.5rem 1rem;font-size:1rem;border:none;border-radius:6px;background:#fff;cursor:pointer}
+    #loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:30}
+
+
+    /* tweet panel */
+    #tweetPanel{position:fixed;top:0;right:-100%;width:100vw;height:100vh;background:rgba(0,0,0,.95);color:#fff;z-index:100;display:flex;align-items:center;justify-content:center;transition:right .3s ease}
+    #tweetPanel.open{right:0}
+    #tweetContent{text-align:center;max-width:90vw}
+    #tweetText{width:90vw;height:30vh;font-size:1rem;padding:1rem;background:#111;color:#0f0;border:1px solid #888;border-radius:10px;resize:none;margin-bottom:1rem}
+    #tweetPanel button{padding:.5rem 1rem;font-size:1rem;background:#fff;color:#000;border:none;border-radius:5px;cursor:pointer}
+
   </style>
 </head>
 <body>
   <div id="app">
-    <div id="videoContainer">
-      <video id="video" autoplay playsinline muted></video>
-      <div id="loader">Loading camera…</div>
-    </div>
-
+    <div id="videoContainer"><video id="video" autoplay playsinline muted></video><div id="loader">Loading camera…</div></div>
     <div id="map"></div>
     <div id="geoInfo">Locating…</div>
+    <div id="reportbuddy">Report Buddy v0.1</div>
 
     <div id="eventSelector">
-      <label for="eventType">Event: </label>
+      <label for="eventType"></label>
       <select id="eventType">
+        <option value=""></option>
         <option value="Tornado">Tornado</option>
         <option value="Funnel Cloud">Funnel Cloud</option>
         <option value="Wall Cloud">Wall Cloud</option>
@@ -85,27 +56,25 @@
     </div>
 
     <div id="hailSizeSelector">
-      <label for="hailSize">Size: </label>
+      <label for="hailSize">Size:</label>
       <select id="hailSize">
         <option value="">Select size</option>
-        <option value="Pea (0.25″)">Pea (0.25″)</option>
-        <option value="Nickel (0.88″)">Nickel (0.88″)</option>
-        <option value="Quarter (1.00″)">Quarter (1.00″)</option>
-        <option value="Golf Ball (1.75″)">Golf Ball (1.75″)</option>
-        <option value="Hen Egg (2.00″)">Hen Egg (2.00″)</option>
-        <option value="Tennis Ball (2.50″)">Tennis Ball (2.50″)</option>
-        <option value="Baseball (2.75″)">Baseball (2.75″)</option>
-        <option value="Softball (4.00″)">Softball (4.00″)</option>
+        <option>Pea (0.25″)</option>
+        <option>Nickel (0.88″)</option>
+        <option>Quarter (1.00″)</option>
+        <option>Golf Ball (1.75″)</option>
+        <option>Hen Egg (2.00″)</option>
+        <option>Tennis Ball (2.50″)</option>
+        <option>Baseball (2.75″)</option>
+        <option>Softball (4.00″)</option>
       </select>
     </div>
 
     <button id="captureBtn" title="Capture Screen"></button>
 
-    <div id="snapshot">
-      <img id="snapshotImg" src="" alt="Captured photo" />
-      <button id="closeSnap">Close</button>
-    </div>
+    <div id="snapshot"><img id="snapshotImg" alt="Captured"/><button id="closeSnap">Close</button></div>
 
+    <!-- tweet panel -->
     <div id="tweetPanel">
       <div id="tweetContent">
         <h3>Share Report</h3>
@@ -117,132 +86,95 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    let tweetInfo = { wfo: 'NWS', event: 'Tornado', city: '', county: '', lat: '', lon: '', timestamp: '', heading: '' };
+    /* === helpers === */
+    function headingToCompass(deg){if(deg==null||isNaN(deg))return'Unknown';const dir=['N','NE','E','SE','S','SW','W','NW'];return dir[Math.round(deg/45)%8]}
+    function copyTweet(){const t=document.getElementById('tweetText');t.select();document.execCommand('copy');alert('Tweet copied!')}
 
-    const CONSTRAINTS = {
-      video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30, max: 60 } },
-      audio: false
-    };
+    /* === global state === */
+    let tweetInfo={event:'Null',size:'',city:'',county:'',lat:'',lon:'',wfo:'',timestamp:''};
 
-    async function startCamera() {
-      const loader = document.getElementById('loader');
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia(CONSTRAINTS);
-        const video = document.getElementById('video');
-        video.srcObject = stream;
-        await video.play();
-      } catch (err) {
-        alert('Unable to access camera: ' + err.message);
-      } finally {
-        loader.style.display = 'none';
+    /* === camera === */
+    async function startCamera(){
+      const loader=document.getElementById('loader');
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+        const v=document.getElementById('video');v.srcObject=stream;await v.play();
+      }catch(e){alert('Camera error: '+e.message);}
+      loader.style.display='none';
+    }
+
+    /* === screenshot === */
+    async function capturePhoto(){
+      const overlay=document.getElementById('snapshot'),img=document.getElementById('snapshotImg');
+      const canvas=await html2canvas(document.getElementById('app'),{useCORS:true});
+      img.src=canvas.toDataURL('image/png');overlay.style.display='flex';
+    }
+
+    /* === map & geolocation === */
+    async function fetchCountyName(url){
+      try{const r=await fetch(url);if(!r.ok)throw'';const z=await r.json();return z.properties?.name||url.split('/').pop();}catch{return url.split('/').pop();}
+    }
+
+    async function fetchNwsInfo(lat,lon,heading){
+      const info=document.getElementById('geoInfo');
+      try{
+        const r=await fetch(`https://api.weather.gov/points/${lat},${lon}`);if(!r.ok)throw new Error(r.status);
+        const d=await r.json();
+        const city=d.properties.relativeLocation?.properties?.city||'Unknown city';
+        const countyUrl=d.properties.county;const county=countyUrl?await fetchCountyName(countyUrl):'Unknown county';
+        const wfo=d.properties.cwa||'NWS';
+        const state=d.properties.relativeLocation?.properties?.state||'TEST';
+        tweetInfo={...tweetInfo,city,state,county,wfo:`NWS${wfo}`,lat:lat.toFixed(3),lon:lon.toFixed(3),timestamp:new Date().toLocaleString()};
+        info.textContent=`Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near:${city}, ${state} | ${county} County | attn WFO:${wfo}${heading?` | Heading: ${heading}° (${headingToCompass(heading)})`:''}`;
+      }catch(e){info.textContent='NWS fetch error';}
+    }
+
+    function initMap(){
+      const map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(async pos=>{
+          const {latitude:lat,longitude:lon,accuracy,heading}=pos.coords;
+          map.setView([lat,lon],9);L.marker([lat,lon]).addTo(map);
+          if(accuracy)L.circle([lat,lon],{radius:accuracy,color:'#3388ff',weight:1}).addTo(map);
+          await fetchNwsInfo(lat,lon,heading);
+        },e=>alert('Geo error: '+e.message),{enableHighAccuracy:true,timeout:1e4});
       }
+      map.zoomControl.remove();
     }
 
-    async function capturePhoto() {
-      const overlay = document.getElementById('snapshot');
-      const imgEl = document.getElementById('snapshotImg');
-      const canvas = await html2canvas(document.getElementById('app'), { useCORS: true });
-      canvas.toBlob(blob => {
-        imgEl.src = URL.createObjectURL(blob);
-        overlay.style.display = 'flex';
-      }, 'image/jpeg', 0.92);
+    
+    /* === event / hail menus === */
+    function setupMenus(){
+      const eventSel=document.getElementById('eventType'),hailSel=document.getElementById('hailSizeSelector'),hailSize=document.getElementById('hailSize');
+      function toggle(){const e=eventSel.value;tweetInfo.event=e;hailSel.style.display=e==='Hail'?'block':'none';if(e!=='Hail'){tweetInfo.size='';hailSize.value='';}}
+      eventSel.addEventListener('change',toggle);toggle();
+      hailSize.addEventListener('change',()=>tweetInfo.size=hailSize.value);
     }
 
-    function initMap() {
-      const map = L.map('map');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
-      const info = document.getElementById('geoInfo');
-
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          async (pos) => {
-            const { latitude: lat, longitude: lon, accuracy, heading } = pos.coords;
-            tweetInfo.lat = lat.toFixed(5);
-            tweetInfo.lon = lon.toFixed(5);
-            tweetInfo.heading = heading;
-            map.setView([lat, lon], 13);
-            L.marker([lat, lon]).addTo(map);
-            if (accuracy) {
-              L.circle([lat, lon], { radius: accuracy, color: '#3388ff', weight: 1 }).addTo(map);
-            }
-            await fetchNwsInfo(lat, lon, heading);
-          },
-          err => {
-            info.textContent = 'Geolocation error: ' + err.message;
-            map.setView([20, 0], 2);
-          },
-          { enableHighAccuracy: true, timeout: 10000 }
-        );
-      } else {
-        info.textContent = 'Geolocation not supported.';
-        map.setView([20, 0], 2);
-      }
-    }
-
-    async function fetchNwsInfo(lat, lon, heading) {
-      const info = document.getElementById('geoInfo');
-      try {
-        const response = await fetch(`https://api.weather.gov/points/${lat},${lon}`);
-        const data = await response.json();
-        const city = data.properties.relativeLocation.properties.city || 'Unknown';
-        const county = data.properties.relativeLocation.properties.county || 'Unknown';
-        const wfo = data.properties.cwa || 'NWS';
-        tweetInfo.city = city;
-        tweetInfo.county = county;
-        tweetInfo.wfo = `NWS${wfo}`;
-        const now = new Date();
-        tweetInfo.timestamp = now.toLocaleString();
-        info.textContent = `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)} | ${city}, ${county}, ${wfo}${heading ? ` | Heading: ${heading}°` : ''}`;
-      } catch (err) {
-        info.textContent = `Lat: ${lat.toFixed(5)}, Lon: ${lon.toFixed(5)} | NWS API error`;
-      }
-    }
-
-    function setupEventMenus() {
-      const eventSel = document.getElementById('eventType');
-      const hailMenu = document.getElementById('hailSizeSelector');
-      eventSel.addEventListener('change', () => {
-        tweetInfo.event = eventSel.value;
-        hailMenu.style.display = eventSel.value === 'Hail' ? 'block' : 'none';
-        if (eventSel.value !== 'Hail') document.getElementById('hailSize').value = '';
-      });
-    }
-
-    function copyTweet() {
-      const tweetBox = document.getElementById('tweetText');
-      tweetBox.select();
-      document.execCommand('copy');
-      alert('Tweet copied!');
-    }
-
-    function showTweetPanel() {
-      const tweetBox = document.getElementById('tweetText');
-      const tweet = `@${tweetInfo.wfo} ${tweetInfo.event} reported near ${tweetInfo.city}, ${tweetInfo.county} (Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon}) at ${tweetInfo.timestamp}. #wx`;
-      tweetBox.value = tweet;
+    /* === tweet panel & swipe === */
+    function openTweetPanel(){
+      const t=document.getElementById('tweetText');
+      const sizePart=tweetInfo.event==='Hail'&&tweetInfo.size?` (${tweetInfo.size})`:''; 
+      t.value=`@${tweetInfo.wfo} ${tweetInfo.event}${sizePart} reported near ${tweetInfo.city},${state} ${tweetInfo.county} county | (Lat ${tweetInfo.lat}, Lon ${tweetInfo.lon}) at ${tweetInfo.timestamp}. looking${tweetInfo.headingToCompass} #${state}wx `;
       document.getElementById('tweetPanel').classList.add('open');
     }
-
-    // Swipe handling
-    let touchStartX = null;
-    document.addEventListener('touchstart', e => touchStartX = e.changedTouches[0].clientX);
-    document.addEventListener('touchend', e => {
-      if (touchStartX === null) return;
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      if (dx < -100) showTweetPanel();
-      if (dx > 100) document.getElementById('tweetPanel').classList.remove('open');
-      touchStartX = null;
+    function closeTweetPanel(){document.getElementById('tweetPanel').classList.remove('open');}
+    let touchStartX=null;
+    document.addEventListener('touchstart',e=>touchStartX=e.changedTouches[0].clientX);
+    document.addEventListener('touchend',e=>{
+      if(touchStartX==null)return;
+      const dx=e.changedTouches[0].clientX-touchStartX;
+      if(dx<-100)openTweetPanel();
+      if(dx>100)closeTweetPanel();
+      touchStartX=null;
     });
 
-    window.addEventListener('load', () => {
-      startCamera();
-      initMap();
-      setupEventMenus();
-      document.getElementById('captureBtn').addEventListener('click', capturePhoto);
-      document.getElementById('closeSnap').addEventListener('click', () => {
-        document.getElementById('snapshot').style.display = 'none';
-      });
+    /* === init === */
+    window.addEventListener('load',()=>{
+      startCamera();initMap();setupMenus();
+      document.getElementById('captureBtn').addEventListener('click',capturePhoto);
+      document.getElementById('closeSnap').addEventListener('click',()=>document.getElementById('snapshot').style.display='none');
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
 </html>
