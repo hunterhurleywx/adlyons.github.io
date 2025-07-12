@@ -25,9 +25,9 @@
     #snapshot button{margin-top:1rem;padding:.5rem 1rem;font-size:1rem;border:none;border-radius:6px;background:#fff;cursor:pointer}
     #loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);z-index:30}
 
-    #tweetPanel{position:fixed;top:0;right:-100%;width:95vw;height:100vh;background:rgba(0,0,0,.95);color:#fff;z-index:100;display:flex;align-items:center;justify-content:center;transition:right .3s ease}
+    #tweetPanel{position:fixed;top:0;right:-110vw;width:98vw;height:100vh;background:rgba(0,0,0,.95);color:#fff;z-index:100;display:flex;align-items:center;justify-content:center;transition:right .3s ease; box-sizing: border-box; padding: 1rem; }
     #tweetPanel.open{right:0}
-    #tweetContent{text-align:center;max-width:90vw}
+    #tweetContent{text-align:center;max-width:90; vw box-sizing: border-box;}
     #tweetText{width:90vw;height:30vh;font-size:1rem;padding:1rem;background:#111;color:#0f0;border:1px solid #888;border-radius:10px;resize:none;margin-bottom:1rem}
     #tweetPanel button{padding:.5rem 1rem;font-size:1rem;background:#fff;color:#000;border:none;border-radius:5px;cursor:pointer}
   </style>
@@ -97,9 +97,20 @@
     };
 
     async function startCamera(){
+
+      const VIDEO_CONSTRAINTS = {
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1920 },   // Force HD width
+          height: { ideal: 1080 },  // Force HD height
+          frameRate: { ideal: 30, max: 60 }
+        },
+        audio: false
+      };
+
       const loader=document.getElementById('loader');
       try{
-        const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+        const stream=await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS);
         const v=document.getElementById('video');
         v.srcObject=stream;await v.play();
       }catch(e){alert('Camera error: '+e.message);}
