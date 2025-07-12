@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Report Buddy V0.3</title>
+  <title>Report Buddy V0.5</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -48,7 +48,7 @@
     <div id="videoContainer"><video id="video" autoplay playsinline muted></video><div id="loader">Loading camera…</div></div>
     <div id="map"></div>
     <div id="geoInfo">Locating…</div>
-    <div id="reportbuddy">Report Buddy v0.3</div>
+    <div id="reportbuddy">Report Buddy v0.5</div>
 
     <div id="eventSelector">
       <label for="eventType"></label>
@@ -156,9 +156,60 @@
     async function fetchNwsInfo(lat,lon,heading){
       const info=document.getElementById('geoInfo');
 
-      const wfo_handles=
+      try{
+        const r=await fetch(`https://api.weather.gov/points/${lat},${lon}`);
+        if(!r.ok)throw new Error(r.status);
+        const d=await r.json();
+        const city=d.properties.relativeLocation?.properties?.city||'Unknown';
+        const state=d.properties.relativeLocation?.properties?.state||'UNK';
+        const countyUrl=d.properties.county;
+        const county=countyUrl?await fetchCountyName(countyUrl):'Unknown';
+        const wfo=d.properties.cwa||'WFO';
+        tweetInfo={...tweetInfo,city,state,county,wfo:`NWS${wfo}`,lat:lat.toFixed(3),lon:lon.toFixed(3),timestamp:new Date().toLocaleString(),heading};
+        info.textContent=`${tweetInfo.timestamp} | Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near: ${city}, ${state} | ${county} County | WFO: ${wfo}${heading ? ' | Heading: ' + heading.toFixed(0) + '° (' + headingToCompass(heading) + ')' : ''}`;
+      }catch(e){
+        info.textContent='NWS fetch error';
+      }
+    }
 
-      {
+    function initMap(){
+      const map=L.map('map');
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:9}).addTo(map);
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(async pos=>{
+          const {latitude:lat,longitude:lon,accuracy,heading}=pos.coords;
+          map.setView([lat,lon],9);
+          L.marker([lat,lon]).addTo(map);
+          if(accuracy)L.circle([lat,lon],{radius:accuracy,color:'#3388ff',weight:1}).addTo(map);
+          await fetchNwsInfo(lat,lon,heading);
+        },e=>alert('Geo error: '+e.message),{enableHighAccuracy:true,timeout:1e4});
+      }
+      map.zoomControl.remove();
+      map.scrollWheelZoom.disable();
+      map.doubleClickZoom.disable(); 
+    }
+
+    function setupMenus(){
+      const eventSel=document.getElementById('eventType'),
+            hailSel=document.getElementById('hailSizeSelector'),
+            hailSize=document.getElementById('hailSize');
+      function toggle(){
+        const e=eventSel.value;
+        tweetInfo.event=e;
+        hailSel.style.display=e==='Hail'?'block':'none';
+        if(e!=='Hail'){tweetInfo.size='';hailSize.value='';}
+      }
+      eventSel.addEventListener('change',toggle);toggle();
+      hailSize.addEventListener('change',()=>tweetInfo.size=hailSize.value);
+    }
+
+    function openTweetPanel(){
+      const t=document.getElementById('tweetText');
+      const sizePart=tweetInfo.event==='Hail'&&tweetInfo.size?` (${tweetInfo.size})`:'';
+      const headingText=tweetInfo.heading!=null?` looking ${headingToCompass(tweetInfo.heading)}`:'';
+
+      const wfo_handles= {
+
         "ABQ": "NWSAlbuquerque",
         "ABR": "NWSAberdeen",
         "AFC": "NWSAnchorage",
@@ -265,58 +316,9 @@
         "GJT": "NWSGrandJunction"
       }
 
-      try{
-        const r=await fetch(`https://api.weather.gov/points/${lat},${lon}`);
-        if(!r.ok)throw new Error(r.status);
-        const d=await r.json();
-        const city=d.properties.relativeLocation?.properties?.city||'Unknown'
-        const state=d.properties.relativeLocation?.properties?.state||'UNK';
-        const countyUrl=d.properties.county;
-        const county=countyUrl?await fetchCountyName(countyUrl):'Unknown';
-        const wfo=d.properties.cwa||'WFO';
-        const handle = wfoHandles[wfoCode] || `NWS${wfoCode}`;
-        tweetInfo={...tweetInfo,city,state,county,wfo:`${handle}`,lat:lat.toFixed(3),lon:lon.toFixed(3),timestamp:new Date().toLocaleString(),heading};
-        info.textContent=`${tweetInfo.timestamp} | Lat: ${tweetInfo.lat}, Lon: ${tweetInfo.lon} | Near: ${city}, ${state} | ${county} County | WFO: ${wfo}${heading ? ' | Heading: ' + heading.toFixed(0) + '° (' + headingToCompass(heading) + ')' : ''}`;
-      }catch(e){
-        info.textContent='NWS fetch error';
-      }
-    }
 
-    function initMap(){
-      const map=L.map('map');
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:9}).addTo(map);
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(async pos=>{
-          const {latitude:lat,longitude:lon,accuracy,heading}=pos.coords;
-          map.setView([lat,lon],9);
-          L.marker([lat,lon]).addTo(map);
-          if(accuracy)L.circle([lat,lon],{radius:accuracy,color:'#3388ff',weight:1}).addTo(map);
-          await fetchNwsInfo(lat,lon,heading);
-        },e=>alert('Geo error: '+e.message),{enableHighAccuracy:true,timeout:1e4});
-      }
-      map.zoomControl.remove();
-      map.scrollWheelZoom.disable();
-    }
-
-    function setupMenus(){
-      const eventSel=document.getElementById('eventType'),
-            hailSel=document.getElementById('hailSizeSelector'),
-            hailSize=document.getElementById('hailSize');
-      function toggle(){
-        const e=eventSel.value;
-        tweetInfo.event=e;
-        hailSel.style.display=e==='Hail'?'block':'none';
-        if(e!=='Hail'){tweetInfo.size='';hailSize.value='';}
-      }
-      eventSel.addEventListener('change',toggle);toggle();
-      hailSize.addEventListener('change',()=>tweetInfo.size=hailSize.value);
-    }
-
-    function openTweetPanel(){
-      const t=document.getElementById('tweetText');
-      const sizePart=tweetInfo.event==='Hail'&&tweetInfo.size?` (${tweetInfo.size})`:'';
-      const headingText=tweetInfo.heading!=null?` looking ${headingToCompass(tweetInfo.heading)}`:'';
-      t.value=`@${tweetInfo.wfo} ${tweetInfo.event}${sizePart} reported near ${tweetInfo.city}, ${tweetInfo.state} ${tweetInfo.county} County (Lat ${tweetInfo.lat}, Lon ${tweetInfo.lon}) at ${tweetInfo.timestamp}.${headingText} #${tweetInfo.state}wx // generated by Report Buddy: ${Version_ID}`;
+      const handle = wfo_handles[tweetInfo.wfo] || `NWS${tweetInfo.wfo}`;
+      t.value=`@${handle} ${tweetInfo.event}${sizePart} reported near ${tweetInfo.city}, ${tweetInfo.state} ${tweetInfo.county} County (Lat ${tweetInfo.lat}, Lon ${tweetInfo.lon}) at ${tweetInfo.timestamp}.${headingText} #${tweetInfo.state}wx // generated by Report Buddy: ${Version_ID}`;
       document.getElementById('tweetPanel').classList.add('open');
     }
 
