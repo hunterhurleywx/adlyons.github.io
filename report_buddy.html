@@ -8,18 +8,29 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     html,body{margin:0;padding:0;height:100%;background:#000;color:#fff;font-family:sans-serif;overscroll-behavior:none}
-    #app{position:relative;width:100vw;height:100vh;overflow:hidden}
+    #app{position:relative;width:100vw;height:100vh;overflow:visible}
     #reportbuddy{position:absolute;top:0.3%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);padding:.1rem .3rem;border-radius:2px;font-size:.65rem;line-height:1.25;z-index:100}
+    
     #videoContainer{position:relative;width:100%;height:100%;overflow:hidden}
+
     #video{width:100%;height:100%;object-fit:cover}
+
     #map{position:absolute;bottom:3.5rem;right:.2rem;width:30vw;height:20vh;min-width:120px;min-height:100px;border:2px solid #fff;border-radius:8px;overflow:hidden;z-index:20}
-    #geoInfo{position:absolute;bottom:1vh;left:1rem;background:rgba(0,0,0,.6);padding:.4rem .6rem;border-radius:8px;font-size:.85rem;line-height:1.25;z-index:20;pointer-events:none;max-width:100vw}
-    #eventSelector{position:absolute;top:5%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:.5rem 1rem;border-radius:10px;z-index:25;font-size:1.5rem;font-weight:bold;text-align:center}
-    #eventSelector select{background:transparent;color:#fff;font-size:1.75rem;border:none;outline:none;appearance:none}
+
+    #geoInfo{position:absolute;bottom:1vh;left:1rem;background:rgba(0,0,0,.6);padding:.4rem .6rem;border-radius:8px;font-size:.85rem;line-height:1.25;z-index:20;pointer-events:none;max-width:95vw}
+
+    #eventSelector{position:absolute;top:5%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:.5rem 1rem;border-radius:10px;z-index:25;font-size:1.45rem;font-weight:bold;text-align:center; white-space: nowrap; overflow: visible; text-overflow: ellipsis; max-width: 100%;}
+
+    #eventSelector select{background:transparent;color:#fff;font-size:1.4rem;border:none;outline:none;appearance:none max-width: 90vw; text-align: center; box-sizing: border-box; white-space: nowrap; overflow: visible; text-overflow: ellipsis;}
+
     #hailSizeSelector{position:absolute;top:15%;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:.5rem 1rem;border-radius:10px;z-index:25;font-size:1.25rem;font-weight:bold;text-align:center;display:none}
+
     #hailSizeSelector select{background:transparent;color:#fff;font-size:1.25rem;border:none;outline:none;appearance:none}
+
     #captureBtn{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:50px;height:50px;border:4px solid #fff;border-radius:50%;background:rgba(255,255,255,.2);z-index:25;cursor:pointer}
+
     #captureBtn:active{background:rgba(255,255,255,.4)}
+
     #snapshot{position:absolute;inset:0;background:rgba(0,0,0,.85);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:40}
     #snapshot img{max-width:100%;max-height:90%;border:4px solid #fff;border-radius:8px}
     #snapshot button{margin-top:1rem;padding:.5rem 1rem;font-size:1rem;border:none;border-radius:6px;background:#fff;cursor:pointer}
@@ -83,6 +94,9 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+
+    const Version_ID ='V0.3';
+
     function headingToCompass(deg){
       if(deg==null||isNaN(deg))return'Unknown';
       const dir=['N','NE','E','SE','S','SW','W','NW'];
@@ -124,7 +138,7 @@
       // Set the opacity to 0 prior to the canvas capture
       captureButton.style.opacity = '0';
       const overlay=document.getElementById('snapshot'),img=document.getElementById('snapshotImg');
-      const canvas=await html2canvas(document.getElementById('app'),{useCORS:true});
+      const canvas=await html2canvas(document.getElementById('app'),{useCORS:true, scale: window.devicePixelRatio || 3});
       img.src=canvas.toDataURL('image/png');
       overlay.style.display='flex';
       captureButton.style.opacity = '1';
@@ -163,7 +177,7 @@
       if(navigator.geolocation){
         navigator.geolocation.getCurrentPosition(async pos=>{
           const {latitude:lat,longitude:lon,accuracy,heading}=pos.coords;
-          map.setView([lat,lon],8);
+          map.setView([lat,lon],9);
           L.marker([lat,lon]).addTo(map);
           if(accuracy)L.circle([lat,lon],{radius:accuracy,color:'#3388ff',weight:1}).addTo(map);
           await fetchNwsInfo(lat,lon,heading);
@@ -191,7 +205,7 @@
       const t=document.getElementById('tweetText');
       const sizePart=tweetInfo.event==='Hail'&&tweetInfo.size?` (${tweetInfo.size})`:'';
       const headingText=tweetInfo.heading!=null?` looking ${headingToCompass(tweetInfo.heading)}`:'';
-      t.value=`@${tweetInfo.wfo} ${tweetInfo.event}${sizePart} reported near ${tweetInfo.city}, ${tweetInfo.state} ${tweetInfo.county} County (Lat ${tweetInfo.lat}, Lon ${tweetInfo.lon}) at ${tweetInfo.timestamp}.${headingText} #${tweetInfo.state}wx`;
+      t.value=`@${tweetInfo.wfo} ${tweetInfo.event}${sizePart} reported near ${tweetInfo.city}, ${tweetInfo.state} ${tweetInfo.county} County (Lat ${tweetInfo.lat}, Lon ${tweetInfo.lon}) at ${tweetInfo.timestamp}.${headingText} #${tweetInfo.state}wx // generated by Report Buddy: ${Version_ID}`;
       document.getElementById('tweetPanel').classList.add('open');
     }
 
