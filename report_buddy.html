@@ -49,7 +49,7 @@
       left: -100%;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.95);
+      background: rgba(0, 0, 0, 0.85);
       color: #fff;
       z-index: 100;
       display: flex;
@@ -70,15 +70,15 @@
     }
 
     #locationMap {
-      height: 45%;
+      height: 42%;
       width: 100%;
       background: #222;
     }
 
     #locationContent {
       flex: 1;
-      padding: 1rem;
-      overflow-y: auto;
+      padding: 0.5rem;
+      overflow-y: visible;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -109,7 +109,7 @@
         <option value="Hail">Hail</option>
         <option value="Damage">Damage</option>
         <option value="Flooding">Flooding</option>
-        <option value="Wild Fire">WildFire</option>
+        <option value="Wild Fire">Wild Fire</option>
       </select>
     </div>
 
@@ -120,11 +120,14 @@
         <option>Pea (0.25″)</option>
         <option>Nickel (0.88″)</option>
         <option>Quarter (1.00″)</option>
+        <option>Half Dollar ((1.25″)</option>
+        <option>Ping Pong ((1.50″)</option>
         <option>Golf Ball (1.75″)</option>
         <option>Hen Egg (2.00″)</option>
         <option>Tennis Ball (2.50″)</option>
         <option>Baseball (2.75″)</option>
-        <option>Softball (4.00″)</option>
+        <option>DVD (4.00″)</option>
+        <option>Grapefruit (4.50″)</option>
       </select>
     </div>
 
@@ -609,7 +612,7 @@
         const cwaLayer = L.geoJSON(cwaData, {
           style: feature => ({
             color: "#800080",       // purple outline
-            weight: 3,
+            weight: 5,
             fill: false,
           })
         }).addTo(locationMap);
